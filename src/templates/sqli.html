@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4">SQL Injection (SQLi)</h2>
+    <p class="text-muted">
+        SQL Injection occurs when untrusted user input is concatenated directly into a database query. This allows an attacker to manipulate the query's logic.
+    </p>
+
+    <div class="row mt-4">
+        <!-- Attack Panel -->
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white">
+                    <strong>1. The Login Form</strong>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ url_for('sqli') }}">
+                        <div class="mb-3">
+                            <label class="form-label">Username</label>
+                            <input type="text" name="username" class="form-control" value="' OR '1'='1' -- " required>
+                            <div class="form-text text-danger">Payload hint: <code>' OR '1'='1' -- </code></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" name="password" class="form-control" value="anything">
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label">Backend Implementation</label>
+                            <select name="mode" class="form-select">
+                                <option value="vulnerable">Vulnerable (Direct Formatting)</option>
+                                <option value="secure">Secure (Parameterized Query)</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">Attempt Login</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result & Code Panel -->
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-secondary text-white">
+                    <strong>2. Under the Hood</strong>
+                </div>
+                <div class="card-body p-4">
+                    {% if result %}
+                        <div class="alert alert-success">
+                            <h4>🔥 Exploit Successful!</h4>
+                            {{ result }}
+                        </div>
+                    {% elif error %}
+                        <div class="alert alert-danger">
+                            <h4>🛡️ Login Failed</h4>
+                            {{ error }}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            Submit the form to see what happens on the backend.
+                        </div>
+                    {% endif %}
+
+                    {% if query_str %}
+                        <h5 class="mt-4">Executed SQL Query:</h5>
+                        <pre class="code-block"><code>{{ query_str }}</code></pre>
+                        
+                        {% if "OR" in query_str and "1'='1" in query_str %}
+                            <div class="mt-3">
+                                <strong>Why did this happen?</strong><br>
+                                By typing <code>' OR '1'='1' -- </code> into the username, we broke out of the string quotes. The <code>OR '1'='1'</code> evaluates to True, and the <code>--</code> acts as a SQL comment, completely erasing the password check from the query!
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

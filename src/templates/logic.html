@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4">Broken Business Logic (Fund Theft)</h2>
+    <p class="text-muted">
+        This occurs when a server blindly trusts data provided by the client (web browser) to make critical business decisions, like deciding whose account to withdraw money from.
+    </p>
+
+    <div class="row mt-4">
+        <!-- Attack Panel -->
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <strong>1. Wire Transfer Form</strong>
+                    <span class="badge bg-info text-dark">Current Session: Bob (ID: {{ current_user_id }})</span>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ url_for('logic') }}">
+                        <div class="mb-3">
+                            <label class="form-label text-danger fw-bold">Intercepted Hidden Field: <code>from_account</code></label>
+                            <input type="number" name="from_account" class="form-control border-danger bg-light" value="1" required>
+                            <div class="form-text">
+                                In a real app, this field is usually hidden (<code>type="hidden"</code>). Attackers use browser dev tools or proxies to change it. Changing it to 1 charges the Admin's account instead of Bob's!
+                            </div>
+                        </div>
+
+                        <hr>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Send Money To (User ID):</label>
+                            <input type="number" name="to_account" class="form-control" value="2" required>
+                            <div class="form-text">Sending it to ID 2 (Bob / You).</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Amount ($):</label>
+                            <input type="number" name="amount" class="form-control" value="50000" required>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label">Backend Implementation</label>
+                            <select name="mode" class="form-select">
+                                <option value="vulnerable" {% if mode == 'vulnerable' %}selected{% endif %}>Vulnerable (Trust Client)</option>
+                                <option value="secure" {% if mode == 'secure' %}selected{% endif %}>Secure (Enforce Session)</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">Execute Transfer</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result & Code Panel -->
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-secondary text-white">
+                    <strong>2. Transaction Log</strong>
+                </div>
+                <div class="card-body p-4">
+                    {% if result %}
+                        <div class="alert {% if mode == 'vulnerable' %}alert-danger{% else %}alert-success{% endif %}">
+                            <h4>{% if mode == 'vulnerable' %}🚨 Unauthorized Transfer!{% else %}✅ Transfer Processed{% endif %}</h4>
+                            {{ result }}
+                        </div>
+                    {% elif error %}
+                        <div class="alert alert-warning">
+                            <h4>⚠️ Error</h4>
+                            {{ error }}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            Submit a wire transfer to see whose account gets charged.
+                        </div>
+                    {% endif %}
+
+                    {% if request.method == 'POST' %}
+                        <h5 class="mt-4">Why did this happen?</h5>
+                        {% if mode == 'vulnerable' %}
+                            <p>
+                                <strong>Vulnerable Mode:</strong> The server read the form data and saw <code>from_account = 1</code>. It trusted this client-provided data completely.<br><br>
+                                Instead of extracting funds from Bob's account (the person actually logged in), it withdrew $50,000 from the Admin and sent it to Bob!
+                            </p>
+                        {% else %}
+                            <p>
+                                <strong>Secure Mode:</strong> The server completely ignores the <code>from_account</code> sent by the browser check. <br><br>
+                                By hardcoding the source of the funds to the server-verified session (<code>actual_from = session_user_id</code>), the attacker can tamper with the form all they want, but the money will still correctly come out of their own account (Bob).
+                            </p>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

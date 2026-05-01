@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4">Insecure Direct Object Reference (IDOR)</h2>
+    <p class="text-muted">
+        IDOR occurs when an application provides direct access to objects (like bank statements) based on user-supplied input, without verifying if the user has the authorization to view that specific object.
+    </p>
+
+    <div class="row mt-4">
+        <!-- Attack Panel -->
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <strong>1. Statement Retriever</strong>
+                    <span class="badge bg-info text-dark">Current Session: Bob (ID: {{ current_user_id }})</span>
+                </div>
+                <div class="card-body p-4">
+                    <p>Usually, the application sets the ID to your own (<code>{{ current_user_id }}</code>). But what happens if you tamper with it?</p>
+                    
+                    <form method="POST" action="{{ url_for('idor') }}">
+                        <div class="mb-3">
+                            <label class="form-label">Target User ID to View</label>
+                            <input type="number" name="target_user_id" class="form-control" value="1" required>
+                            <div class="form-text text-danger">Payload hint: Change the ID to 1 to target the Admin!</div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label">Backend Implementation</label>
+                            <select name="mode" class="form-select">
+                                <option value="vulnerable" {% if mode == 'vulnerable' %}selected{% endif %}>Vulnerable (Blind Trust)</option>
+                                <option value="secure" {% if mode == 'secure' %}selected{% endif %}>Secure (Session Verification)</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">Fetch Bank Statement</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result & Code Panel -->
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-secondary text-white">
+                    <strong>2. Server Response</strong>
+                </div>
+                <div class="card-body p-4">
+                    {% if result %}
+                        <div class="alert alert-success">
+                            <h4>🔥 Access Granted!</h4>
+                            {{ result }}
+                        </div>
+                    {% elif error %}
+                        <div class="alert alert-danger">
+                            <h4>🛡️ Access Blocked</h4>
+                            {{ error }}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            Submit a request to fetch a statement.
+                        </div>
+                    {% endif %}
+
+                    {% if request.method == 'POST' %}
+                        <h5 class="mt-4">Why did this happen?</h5>
+                        {% if mode == 'vulnerable' %}
+                            <p>
+                                <strong>Vulnerable Mode:</strong> The backend received a request for Statement ID <code>{{ target_id }}</code>, and immediately queried the database (<code>SELECT * FROM users WHERE id={{ target_id }}</code>). <br><br>
+                                It completely failed to verify if the person making the request (Session ID: {{ current_user_id }}) is actually the owner of ID {{ target_id }}. You just stole another user's financial data!
+                            </p>
+                        {% else %}
+                            <p>
+                                <strong>Secure Mode:</strong> Before fetching the data, the backend performed an access control check:<br>
+                                <code>if requested_id != current_session_id: return "Forbidden"</code><br><br>
+                                Because you are logged in as ID {{ current_user_id }}, and requested ID {{ target_id }}, the server rightfully blocked the request!
+                            </p>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

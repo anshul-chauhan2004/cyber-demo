@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4">Cross-Site Scripting (XSS)</h2>
+    <p class="text-muted">
+        XSS occurs when an application takes user input and includes it in a web page without proper validation or escaping. This allows attackers to execute malicious scripts in the victim's browser.
+    </p>
+
+    <div class="row mt-4">
+        <!-- Attack Panel -->
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white">
+                    <strong>1. The Search Bar</strong>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ url_for('xss') }}">
+                        <div class="mb-3">
+                            <label class="form-label">Search Query</label>
+                            <input type="text" name="search_query" class="form-control" value="&lt;script&gt;alert('XSS Exploit Successful! Your session cookie could be stolen.');&lt;/script&gt;" required>
+                            <div class="form-text text-danger">Payload hint: <code>&lt;script&gt;alert('XSS')&lt;/script&gt;</code></div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label">Backend Implementation</label>
+                            <select name="mode" class="form-select">
+                                <option value="vulnerable" {% if mode == 'vulnerable' %}selected{% endif %}>Vulnerable (No Escaping)</option>
+                                <option value="secure" {% if mode == 'secure' %}selected{% endif %}>Secure (Auto-escaping)</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">Search</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result & Code Panel -->
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-secondary text-white">
+                    <strong>2. Search Results</strong>
+                </div>
+                <div class="card-body p-4">
+                    {% if request.method == 'POST' %}
+                        <div class="alert {% if mode == 'secure' %}alert-success{% else %}alert-warning{% endif %}">
+                            <strong>You searched for:</strong> <br><br>
+                            <!-- This is where the payload gets reflected! -->
+                            {{ result }}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            Submit a search to see the reflection.
+                        </div>
+                    {% endif %}
+
+                    {% if request.method == 'POST' %}
+                        <h5 class="mt-4">What just happened?</h5>
+                        {% if mode == 'vulnerable' %}
+                            <p>
+                                <strong>Vulnerable Mode:</strong> The server used Flask's <code>Markup()</code> function to explicitly tell the template engine to <strong>NOT</strong> escape the input. <br>
+                                Because we submitted a <code>&lt;script&gt;</code> tag, the browser saw it and immediately executed the JavaScript payload! In a real scenario, this script could be used to steal session cookies, like <code>alert(document.cookie)</code>.
+                            </p>
+                        {% else %}
+                            <p>
+                                <strong>Secure Mode:</strong> By default, modern template engines like Jinja2 automatically escape all variables. <br>
+                                The <code>&lt;</code> and <code>&gt;</code> characters were converted to their HTML entity equivalents (<code>&amp;lt;</code> and <code>&amp;gt;</code>). The browser simply displays the text safely on the screen instead of executing it.
+                            </p>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

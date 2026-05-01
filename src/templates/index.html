@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-3">Welcome to the Vulnerability Sandbox</h1>
+    <p class="lead">An interactive learning environment demonstrating OWASP Top 10 vulnerabilities.</p>
+    
+    <div class="row mt-5">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <h4 class="card-title">📖 About This Portal</h4>
+                    <p class="card-text text-muted">
+                        This application intentionally contains severe security flaws for educational purposes. 
+                        It was built to demonstrate how web attacks happen in real life, and more importantly, how to fix them.
+                    </p>
+                    <hr>
+                    <h5>Instructions</h5>
+                    <ol>
+                        <li>Select an attack vector from the left sidebar.</li>
+                        <li>Read the explanation of the vulnerability.</li>
+                        <li>Try exploiting the <strong>Vulnerable</strong> implementation.</li>
+                        <li>Review the code to see why the <strong>Secure</strong> implementation prevents the attack.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 bg-light">
+                <div class="card-body">
+                    <h5 class="card-title">Users in Database</h5>
+                    <ul class="list-group list-group-flush mt-3">
+                        <li class="list-group-item bg-transparent"><strong>admin</strong> (Target 🎯)</li>
+                        <li class="list-group-item bg-transparent"><strong>bob</strong> (User)</li>
+                        <li class="list-group-item bg-transparent"><strong>alice</strong> (User)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

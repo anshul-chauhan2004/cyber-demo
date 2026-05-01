@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Group 5 - Cyber Demo Portal</title>
+    <!-- Using Bootstrap for quick, clean styling -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { display: flex; height: 100vh; overflow: hidden; }
+        .sidebar { width: 250px; background: #212529; color: white; padding: 20px; }
+        .sidebar a { color: #adb5bd; text-decoration: none; display: block; margin: 10px 0; padding: 10px; transition: 0.2s;}
+        .sidebar a:hover, .sidebar a.active { color: white; background: #495057; border-radius: 5px; }
+        .sidebar hr { border-top: 1px solid #6c757d; }
+        .content { flex-grow: 1; padding: 30px; overflow-y: auto; background: #f8f9fa; }
+        .code-block { background: #2b2b2b; color: #f8f8f2; padding: 15px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h4>Cyber Demo</h1>
+        <small class="text-muted">Group 5</small>
+        <hr>
+        <a href="/" class="{% if request.endpoint == 'index' %}active{% endif %}">🏠 Home</a>
+        <a href="{{ url_for('sqli') }}" class="{% if request.endpoint == 'sqli' %}active{% endif %}">💉 SQL Injection</a>
+        <a href="{{ url_for('xss') }}" class="{% if request.endpoint == 'xss' %}active{% endif %}">📜 Cross-Site Scripting</a>
+        <a href="{{ url_for('idor') }}" class="{% if request.endpoint == 'idor' %}active{% endif %}">🔍 IDOR / Access</a>
+        <a href="{{ url_for('logic') }}" class="{% if request.endpoint == 'logic' %}active{% endif %}">💰 Business Logic</a>
+    </div>
+    
+    <div class="content">
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
