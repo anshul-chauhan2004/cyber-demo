@@ -1,3 +1,4 @@
+import os
 from flask import Flask, render_template, request, session, redirect, url_for, g
 import sqlite3
 from markupsafe import Markup
@@ -195,6 +196,7 @@ def logic():
 
     return render_template('logic.html', current_user_id=current_session_user_id, result=result, error=error, mode=mode)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     init_db()
-    app.run(debug=True, port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
